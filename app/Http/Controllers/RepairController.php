@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Repair;
+use App\Models\RepairStatusHistory;
 use App\Http\Requests\RepairRequest;
 use App\Services\RepairService;
 use Illuminate\Http\Request;
@@ -218,7 +219,17 @@ class RepairController extends Controller
             return response()->json(['success' => false, 'message' => 'Parts can only be added during in-progress status.'], 422);
         }
 
-        $repair->parts()->create($data);
+        $part = $repair->parts()->create($data);
+
+        // Log to status history so it appears in Status & History tab
+        $partName = \App\Models\Part::find($data['part_id'])->name ?? 'Part';
+        RepairStatusHistory::create([
+            'repair_id'  => $repair->id,
+            'status'     => $repair->status,
+            'notes'      => "Part added: {$partName} × {$data['quantity']} @ ₹" . number_format($data['cost_price'], 2),
+            'updated_by' => auth()->id(),
+        ]);
+
         return response()->json(['success' => true, 'message' => 'Part added']);
     }
 
@@ -228,7 +239,18 @@ class RepairController extends Controller
             return response()->json(['success' => false, 'message' => 'This repair is locked.'], 422);
         }
 
+        $repairPart = $repair->parts()->with('part')->where('id', $partId)->first();
+        $partName = $repairPart?->part?->name ?? 'Part';
+
         $repair->parts()->where('id', $partId)->delete();
+
+        RepairStatusHistory::create([
+            'repair_id'  => $repair->id,
+            'status'     => $repair->status,
+            'notes'      => "Part removed: {$partName}",
+            'updated_by' => auth()->id(),
+        ]);
+
         return response()->json(['success' => true, 'message' => 'Part removed']);
     }
 
@@ -259,6 +281,15 @@ class RepairController extends Controller
         $data['status'] = $data['status'] ?? 'pending';
 
         $repair->repairServices()->create($data);
+
+        // Log to status history
+        RepairStatusHistory::create([
+            'repair_id'  => $repair->id,
+            'status'     => $repair->status,
+            'notes'      => "Service added: {$data['service_type_name']}, ₹" . number_format($data['customer_charge'], 2),
+            'updated_by' => auth()->id(),
+        ]);
+
         return response()->json(['success' => true, 'message' => 'Service added']);
     }
 
@@ -287,7 +318,18 @@ class RepairController extends Controller
             return response()->json(['success' => false, 'message' => 'This repair is locked.'], 422);
         }
 
+        $svc = $repair->repairServices()->where('id', $serviceId)->first();
+        $svcName = $svc?->service_type_name ?? 'Service';
+
         $repair->repairServices()->where('id', $serviceId)->delete();
+
+        RepairStatusHistory::create([
+            'repair_id'  => $repair->id,
+            'status'     => $repair->status,
+            'notes'      => "Service removed: {$svcName}",
+            'updated_by' => auth()->id(),
+        ]);
+
         return response()->json(['success' => true, 'message' => 'Service removed']);
     }
 
@@ -301,8 +343,8 @@ class RepairController extends Controller
             return response()->json(['success' => false, 'message' => 'This repair is locked.'], 422);
         }
 
-        if (!in_array($repair->status, ['completed', 'payment'])) {
-            return response()->json(['success' => false, 'message' => 'Service charge can only be set when repair is completed or in payment stage.'], 422);
+        if (!in_array($repair->status, ['in_progress', 'completed', 'payment'])) {
+            return response()->json(['success' => false, 'message' => 'Service charge can only be set when repair is in progress, completed, or in payment stage.'], 422);
         }
 
         $repair->update($data);

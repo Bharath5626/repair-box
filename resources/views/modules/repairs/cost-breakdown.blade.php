@@ -79,7 +79,7 @@
                     <span class="text-sm font-semibold">₹{{ number_format($repair->total_services, 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Service Charge (Fixed)</span>
+                    <span class="text-sm text-gray-600">Our Service Fee (Fixed)</span>
                     <span class="text-sm font-semibold">₹{{ number_format($repair->service_charge, 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t-2">
