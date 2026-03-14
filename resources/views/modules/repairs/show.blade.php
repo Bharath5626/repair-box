@@ -591,7 +591,11 @@
                         <div>
                             <label class="text-xs font-bold text-gray-600 uppercase block mb-2.5">Change Status</label>
                             <div class="space-y-2">
-                                <template x-for="nextStatus in (repair.status === 'payment' ? (repair.allowed_transitions || []).filter(s => s === 'cancelled') : (repair.allowed_transitions || []))" :key="nextStatus">
+                                <template x-for="nextStatus in (repair.status === 'payment'
+                                        ? (balanceDue() > 0
+                                            ? (repair.allowed_transitions || []).filter(s => s === 'cancelled')
+                                            : (repair.allowed_transitions || []).filter(s => ['closed', 'cancelled'].includes(s)))
+                                        : (repair.allowed_transitions || []))" :key="nextStatus">
                                     <button @click="nextStatus === 'cancelled' ? (showCancel = true) : handleStatusTransition(nextStatus)" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:scale-[1.02] hover:shadow-md" :class="statusTransitionBtnClass(nextStatus)">
                                         <template x-if="nextStatus === 'in_progress'"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></template>
                                         <template x-if="nextStatus === 'completed'"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></template>
@@ -781,6 +785,16 @@
                             </div>
                             <p class="font-bold text-green-700 text-sm">Fully Paid!</p>
                             <p class="text-xs text-gray-500 mt-1">Ready to be closed.</p>
+                        </div>
+                    </template>
+                    <!-- Zero-cost repair summary -->
+                    <template x-if="repair.status === 'payment' && grandTotal() === 0">
+                        <div class="pt-3 border-t border-gray-200 text-center">
+                            <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600 mb-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <p class="font-bold text-blue-700 text-sm">No payment required</p>
+                            <p class="text-xs text-gray-500 mt-1">Grand total is ₹0. Close this repair when ready.</p>
                         </div>
                     </template>
                 </div>

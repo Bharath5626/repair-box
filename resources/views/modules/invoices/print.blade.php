@@ -3,9 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>Invoice #{{ $invoice->invoice_number }}</title>
+    @php
+        $invoicePaperSize = \App\Models\Setting::getValue('invoice_paper_size', '80mm auto');
+        $invoiceDesignVariant = \App\Models\Setting::getValue('invoice_design_variant', 'default');
+        $invoiceHeaderTitle = \App\Models\Setting::getValue('invoice_header_title', \App\Models\Setting::getValue('shop_name', 'RepairBox'));
+        $invoiceHeaderSubtitle = \App\Models\Setting::getValue('invoice_header_subtitle', \App\Models\Setting::getValue('shop_address', 'Mobile Shop Management'));
+        $invoiceFooterText = \App\Models\Setting::getValue('invoice_footer_text', \App\Models\Setting::getValue('shop_phone', 'Thank you for your business!'));
+        $shopName = \App\Models\Setting::getValue('shop_name', 'RepairBox');
+        $shopAddress = \App\Models\Setting::getValue('shop_address', 'Your shop address');
+        $shopPhone = \App\Models\Setting::getValue('shop_phone', 'your-phone');
+        $shopEmail = \App\Models\Setting::getValue('shop_email', 'your-email');
+    @endphp
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #333; padding: 20px; max-width: 80mm; margin: 0 auto; }
+        @php
+            $isA4 = str_starts_with(strtoupper($invoicePaperSize), 'A4');
+            $isA5 = str_starts_with(strtoupper($invoicePaperSize), 'A5');
+        @endphp
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 12px;
+            color: #222;
+            margin: 0;
+            padding: 0;
+            background: #f9fafb;
+        }
+        .invoice-wrapper {
+            margin: 10mm auto;
+            padding: {{ $isA4 ? '18mm 20mm 20mm' : ($isA5 ? '12mm 14mm 14mm' : '16px') }};
+            max-width: {{ $isA4 ? '180mm' : ($isA5 ? '138mm' : '76mm') }};
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+        }
+        @page { margin: 5mm; size: {{ $invoicePaperSize }}; }
         .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 10px; margin-bottom: 10px; }
         .header h1 { font-size: 18px; font-weight: bold; }
         .header p { font-size: 10px; color: #666; }
@@ -21,17 +54,28 @@
         .totals .grand { font-size: 16px; font-weight: bold; border-top: 2px solid #333; padding-top: 5px; margin-top: 5px; }
         .footer { text-align: center; border-top: 2px dashed #333; padding-top: 10px; margin-top: 15px; font-size: 10px; color: #666; }
         .payments { margin-top: 8px; font-size: 10px; }
-        @media print { body { padding: 0; } @page { margin: 5mm; size: 80mm auto; } }
+        @if($invoiceDesignVariant === 'modern')
+        .header { border-bottom: 2px solid #1d4ed8; background: #eff6ff; }
+        .header h1 { color: #1d4ed8; }
+        .totals .grand { color: #065f46; }
+        @elseif($invoiceDesignVariant === 'minimal')
+        .header { border-bottom: 1px solid #ccc; background: transparent; }
+        .header h1 { font-size: 16px; color: #111; }
+        .totals .grand { color: #111; }
+        @endif
+        @media print { body { padding: 0; } @page { margin: 5mm; size: {{ $invoicePaperSize }}; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>RepairBox</h1>
-        <p>Mobile Shop Management</p>
-        <p>Contact: your-phone | your-email</p>
-    </div>
+    <div class="invoice-wrapper">
+        <div class="header">
+            <h1>{{ $invoiceHeaderTitle }}</h1>
+            <p>{{ $shopAddress }}</p>
+            <p>{{ $shopPhone }} | {{ $shopEmail }}</p>
+        </div>
 
     <div class="info">
+        <div><span class="label">Store:</span><span>{{ $shopName }}</span></div>
         <div><span class="label">Invoice:</span><span>{{ $invoice->invoice_number }}</span></div>
         <div><span class="label">Date:</span><span>{{ $invoice->created_at->format('d/m/Y h:i A') }}</span></div>
         @if($invoice->customer)<div><span class="label">Customer:</span><span>{{ $invoice->customer->name }}</span></div>@endif
@@ -65,9 +109,11 @@
     </div>
 
     <div class="footer">
-        <p>Thank you for your business!</p>
+        <p>{{ $invoiceFooterText }}</p>
         <p>Terms & Conditions Apply</p>
     </div>
+
+    </div> <!-- .invoice-wrapper -->
 
     <script>window.onload = function() { window.print(); }</script>
 </body>

@@ -17,6 +17,7 @@ class InvoiceService
                 $item['total'] = $item['quantity'] * $item['price'];
                 $totalAmount += $item['total'];
             }
+            unset($item); // break reference to last element to avoid lingering reference issues
 
             $discount = $data['discount'] ?? 0;
             $finalAmount = $totalAmount - $discount;

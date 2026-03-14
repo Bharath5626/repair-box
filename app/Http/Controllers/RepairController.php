@@ -345,6 +345,20 @@ class RepairController extends Controller
         return response()->json(['success' => true, 'data' => $repair->fresh(), 'message' => 'Service charge updated']);
     }
 
+    public function cancel(Request $request, Repair $repair, RepairService $service)
+    {
+        $data = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            $repair = $service->updateStatus($repair, 'cancelled', 'Repair cancelled', $data['reason']);
+            return response()->json(['success' => true, 'data' => $repair, 'message' => 'Repair cancelled']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
     public function cancelWithRefund(Request $request, Repair $repair, RepairService $service)
     {
         $data = $request->validate([

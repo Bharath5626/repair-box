@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::put('repairs/{repair}/status', [RepairController::class, 'updateStatus']);
     Route::put('repairs/{repair}/service-charge', [RepairController::class, 'updateServiceCharge']);
     Route::post('repairs/{repair}/payment', [RepairController::class, 'addPayment']);
+    Route::post('repairs/{repair}/cancel', [RepairController::class, 'cancel']);
     Route::post('repairs/{repair}/parts', [RepairController::class, 'addPart']);
     Route::delete('repairs/{repair}/parts/{partId}', [RepairController::class, 'removePart']);
     Route::post('repairs/{repair}/services', [RepairController::class, 'addService']);

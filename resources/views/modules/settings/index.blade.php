@@ -9,6 +9,7 @@
         <button @click="tab='service-types'; updateUrl()" :class="tab==='service-types' ? 'btn-primary' : 'btn-secondary'" class="text-sm">Service Types</button>
         <button @click="tab='recharge-providers'; updateUrl()" :class="tab==='recharge-providers' ? 'btn-primary' : 'btn-secondary'" class="text-sm">Recharge Providers</button>
         <button @click="tab='email-templates'; updateUrl()" :class="tab==='email-templates' ? 'btn-primary' : 'btn-secondary'" class="text-sm">Email Templates</button>
+        <button @click="tab='invoice-layout'; updateUrl()" :class="tab==='invoice-layout' ? 'btn-primary' : 'btn-secondary'" class="text-sm">Invoice Layout</button>
         <button @click="tab='backups'; updateUrl()" :class="tab==='backups' ? 'btn-primary' : 'btn-secondary'" class="text-sm">Backups</button>
     </div>
 
@@ -92,6 +93,45 @@
         </div>
     </div>
 
+    {{-- Invoice Layout --}}
+    <div x-show="tab==='invoice-layout'" class="card">
+        <div class="card-header"><h3 class="text-lg font-semibold">Invoice Layout</h3></div>
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Paper Size</label>
+                    <select x-model="settings.invoice_paper_size" class="form-select-custom w-full">
+                        <option value="80mm auto">80mm<br>auto</option>
+                        <option value="80mm 200mm">80mm x 200mm</option>
+                        <option value="A4">A4</option>
+                        <option value="A5">A5</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Design Variant</label>
+                    <select x-model="settings.invoice_design_variant" class="form-select-custom w-full">
+                        <option value="default">Default</option>
+                        <option value="modern">Modern</option>
+                        <option value="minimal">Minimal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Header Title</label>
+                    <input type="text" x-model="settings.invoice_header_title" class="form-input-custom" placeholder="RepairBox">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Header Subtitle</label>
+                    <input type="text" x-model="settings.invoice_header_subtitle" class="form-input-custom" placeholder="Mobile Shop Management">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Footer Text</label>
+                    <input type="text" x-model="settings.invoice_footer_text" class="form-input-custom" placeholder="Thank you for your business">
+                </div>
+            </div>
+            <div class="mt-4"><button @click="saveSettings()" class="btn-primary" :disabled="saving"><span x-show="saving" class="spinner mr-1"></span> Save Invoice Layout</button></div>
+        </div>
+    </div>
+
     {{-- Backups --}}
     <div x-show="tab==='backups'" class="card">
         <div class="card-header flex items-center justify-between">
@@ -172,7 +212,7 @@
 function settingsPage() {
     return {
         tab: 'general', saving: false,
-        settings: {}, settingKeys: ['shop_name','shop_address','shop_phone','shop_email','shop_gst','currency_symbol','invoice_prefix','repair_prefix','tax_percentage','low_stock_threshold'],
+        settings: {}, settingKeys: ['shop_name','shop_address','shop_phone','shop_email','shop_gst','currency_symbol','invoice_prefix','repair_prefix','tax_percentage','low_stock_threshold','invoice_paper_size','invoice_design_variant','invoice_header_title','invoice_header_subtitle','invoice_footer_text'],
         serviceTypes: [], showStModal: false, stEditing: null, stForm: {},
         rechargeProviders: [], showRpModal: false, rpForm: {},
         emailTemplates: [], showEtModal: false, etEditing: null, etForm: {},
