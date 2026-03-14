@@ -101,7 +101,7 @@
 
         .page {
             width: 210mm;
-            min-height: 297mm;
+            height: auto;
             margin: 8mm auto;
             background: #f0f0f0;
             box-shadow: 0 8px 40px rgba(0,0,0,0.18);
@@ -115,12 +115,18 @@
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
 
-        @page { size: A4; margin: 10mm; }
+        @page {
+            size: A4;
+            /* Zero margins = no space for browser to inject URL, date, page number */
+            margin: 0;
+        }
         @media print {
             body { background: #fff; }
             .page {
-                margin: 0; padding: 0;
+                margin: 0; padding: 8mm;
                 box-shadow: none; width: 100%;
+                min-height: unset !important;
+                height: auto !important;
                 background: #fff;
             }
             .invoice-card { box-shadow: none; border: 1px solid #ccc; }
@@ -145,6 +151,7 @@
             align-items: center; justify-content: center;
             flex-shrink: 0;
             background: rgba(255,255,255,0.06);
+            overflow: hidden;
         }
         .logo-ring .lr1 { font-size: 8px; font-weight: 700; color: #fff; letter-spacing: 1px; text-align: center; line-height: 1.3; }
         .logo-ring .lr2 { font-size: 6px; color: rgba(255,255,255,0.4); text-align: center; margin-top: 2px; }
@@ -425,7 +432,7 @@
     <div class="hdr">
         @if($shopIcon)
             <div class="logo-ring" style="background: #fff; border: 2px solid #333; border-radius: 50%;">
-                <img src="{{ asset('storage/' . $shopIcon) }}" style="width: 56px; height: 56px; object-fit: contain; padding: 2px;">
+                <img src="{{ asset('storage/' . $shopIcon) }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;">
             </div>
         @else
             <div class="logo-ring">
@@ -484,8 +491,6 @@
                 <div class="irow"><span class="lb">Name</span><span class="vl">{{ $repair->customer->name }}</span></div>
                 <div class="irow"><span class="lb">Address</span><span class="vl">{{ $customerAddress }}</span></div>
                 <div class="irow"><span class="lb">Phone</span><span class="vl">{{ $repair->customer->mobile_number ?? '-' }}</span></div>
-                <div class="irow"><span class="lb">GSTIN</span><span class="vl">{{ $customerGstin }}</span></div>
-                <div class="irow"><span class="lb">Place of Supply</span><span class="vl">{{ $placeOfSupply }}</span></div>
                 @else
                 <div class="irow"><span class="lb">Name</span><span class="vl">Walk-in Customer</span></div>
                 @endif
@@ -732,6 +737,15 @@
 
 </div><!-- .invoice-card -->
 </div><!-- .page -->
-<script>window.onload=function(){window.print();}</script>
+<script>
+    window.onload = function () {
+        // Small delay ensures fonts/images are loaded before print
+        setTimeout(function () {
+            window.print();
+            // Close the tab after printing (works in most browsers when opened via link)
+            window.onfocus = function () { window.close(); };
+        }, 300);
+    };
+</script>
 </body>
 </html>

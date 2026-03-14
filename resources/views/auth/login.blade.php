@@ -205,15 +205,13 @@
         <div class="card">
             <div class="card-body">
 
-                <form x-data="loginForm()" x-init="init()" @submit.prevent="submit()" class="space-y-5">
-                    <div x-show="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" x-text="error"></div>
+                <form x-data="loginForm()" x-init="init()" @submit.prevent="submit()" class="space-y-5" autocomplete="off">                    <div x-show="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" x-text="error"></div>
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                        <input id="email" x-model="email" type="email" required autofocus class="form-input-custom" placeholder="admin@repairbox.com">
-                    </div>
+                        <input id="email" x-model="email" type="email" required autofocus class="form-input-custom" placeholder="admin@repairbox.com" autocomplete="off">                    </div>
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input id="password" x-model="password" type="password" required class="form-input-custom" placeholder="••••••••">
+                        <input id="password" x-model="password" type="password" required class="form-input-custom" placeholder="••••••••" autocomplete="new-password">
                     </div>
                     <div class="flex items-center justify-between">
                         <label class="flex items-center gap-2 text-sm text-gray-600">
