@@ -6,8 +6,46 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'RepairBox') - Mobile Shop Management</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .page-loader.active {
+            display: flex;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .page-loader.hide {
+            animation: fadeOut 0.3s ease-in-out forwards;
+        }
+
+        .loader-circle {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
 </head>
 <body class="h-full" x-data="{ sidebarOpen: window.innerWidth >= 1024 }" x-init="window.addEventListener('resize', () => { sidebarOpen = window.innerWidth >= 1024 })">
+
+<div class="page-loader" id="pageLoader">
+    <div class="loader-circle"></div>
+</div>
 
 <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
@@ -22,14 +60,24 @@
          @click.away="if(window.innerWidth < 1024) sidebarOpen = false">
 
         <!-- Logo -->
+        @php
+            $shopIcon = \App\Models\Setting::getValue('shop_icon');
+            $shopName = \App\Models\Setting::getValue('shop_name', 'RepairBox');
+        @endphp
         <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-700">
-            <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-            </div>
+            @if($shopIcon)
+                <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-white">
+                    <img src="{{ asset('storage/' . $shopIcon) }}" alt="Shop Icon" class="w-full h-full object-contain">
+                </div>
+            @else
+                <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            @endif
             <div>
-                <h1 class="text-white font-bold text-lg">RepairBox</h1>
+                <h1 class="text-white font-bold text-lg">{{ Str::limit($shopName, 12) }}</h1>
                 <p class="text-gray-400 text-xs">Shop Management</p>
             </div>
         </div>
@@ -234,6 +282,31 @@ window.RepairBox = {
     confirm: function(message) { return Promise.resolve(window.confirm(message)); },
     formatCurrency: function(amount) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount); }
 };
+
+// Page Loader
+const pageLoader = document.getElementById('pageLoader');
+if (pageLoader) {
+    // Show loader on page navigation
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.href && !link.href.includes('#') && link.target !== '_blank' && !link.classList.contains('no-loader')) {
+            if (link.href.includes(window.location.origin) || link.href.startsWith('/')) {
+                pageLoader.classList.add('active');
+            }
+        }
+    });
+
+    // Hide loader on page load
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            if (pageLoader.classList.contains('active')) {
+                pageLoader.classList.remove('active');
+                pageLoader.classList.add('hide');
+                setTimeout(() => pageLoader.classList.remove('hide'), 300);
+            }
+        }, 200);
+    });
+}
 </script>
 @stack('scripts')
 </body>

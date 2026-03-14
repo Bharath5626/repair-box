@@ -9,6 +9,7 @@
         $invoiceHeaderTitle = \App\Models\Setting::getValue('invoice_header_title', \App\Models\Setting::getValue('shop_name', 'RepairBox'));
         $invoiceHeaderSubtitle = \App\Models\Setting::getValue('invoice_header_subtitle', \App\Models\Setting::getValue('shop_address', 'Mobile Shop Management'));
         $invoiceFooterText = \App\Models\Setting::getValue('invoice_footer_text', \App\Models\Setting::getValue('shop_phone', 'Thank you for your business!'));
+        $shopIcon = \App\Models\Setting::getValue('shop_icon', '');
         $shopName = \App\Models\Setting::getValue('shop_name', 'RepairBox');
         $shopAddress = \App\Models\Setting::getValue('shop_address', 'Your shop address');
         $shopPhone = \App\Models\Setting::getValue('shop_phone', 'your-phone');
@@ -69,6 +70,11 @@
 <body>
     <div class="invoice-wrapper">
         <div class="header">
+            @if($shopIcon)
+                <div style="margin-bottom: 8px; display: flex; justify-content: center;">
+                    <img src="{{ asset('storage/' . $shopIcon) }}" style="height: 40px; object-fit: contain;">
+                </div>
+            @endif
             <h1>{{ $invoiceHeaderTitle }}</h1>
             <p>{{ $shopAddress }}</p>
             <p>{{ $shopPhone }} | {{ $shopEmail }}</p>

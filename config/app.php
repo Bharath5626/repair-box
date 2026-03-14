@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demo Mode
+    |--------------------------------------------------------------------------
+    |
+    | Enable demo mode to auto-fill login credentials for demonstration.
+    | Set to "true" in .env to enable.
+    |
+    */
+
+    'demo_mode' => env('DEMO_MODE', false),
+
 ];

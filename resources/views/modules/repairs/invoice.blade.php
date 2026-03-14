@@ -10,6 +10,7 @@
         $shopAddress     = \App\Models\Setting::getValue('shop_address',     'G/456, Basant Lok Comm., Vasant Vihar, Tardeo Road, Maharashtra - 400001');
         $shopPhone       = \App\Models\Setting::getValue('shop_phone',       '111 2222 3333');
         $shopEmail       = \App\Models\Setting::getValue('shop_email',       '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f29b9c949db2819a8097979f9d909b9e97dc919d9f">[email&#160;protected]</a>');
+        $shopIcon        = \App\Models\Setting::getValue('shop_icon',        '');
         $shopGstin       = \App\Models\Setting::getValue('shop_gstin',       '');
         $shopSlogan      = \App\Models\Setting::getValue('shop_slogan',      'Your Trusted Mobile Partner');
         $shopUpiId       = \App\Models\Setting::getValue('upi_id',           'ifox@icici');
@@ -422,10 +423,16 @@
 
     {{-- ══ HEADER ══ --}}
     <div class="hdr">
-        <div class="logo-ring">
-            <div class="lr1">PHONE<br>SHOP</div>
-            <div class="lr2">{{ $shopSlogan }}</div>
-        </div>
+        @if($shopIcon)
+            <div class="logo-ring" style="background: #fff; border: 2px solid #333; border-radius: 50%;">
+                <img src="{{ asset('storage/' . $shopIcon) }}" style="width: 56px; height: 56px; object-fit: contain; padding: 2px;">
+            </div>
+        @else
+            <div class="logo-ring">
+                <div class="lr1">PHONE<br>SHOP</div>
+                <div class="lr2">{{ $shopSlogan }}</div>
+            </div>
+        @endif
 
         <div class="hdr-text">
             <div class="shop-name">{{ $shopName }}</div>

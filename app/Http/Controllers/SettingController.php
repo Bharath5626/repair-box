@@ -21,10 +21,19 @@ class SettingController extends Controller
         $settings = $request->validate([
             'settings' => 'required|array',
             'settings.*' => 'nullable|string|max:500',
+            'shop_icon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
         foreach ($settings['settings'] as $key => $value) {
             Setting::setValue($key, $value);
         }
+
+        // Handle icon upload
+        if ($request->hasFile('shop_icon')) {
+            $file = $request->file('shop_icon');
+            $path = $file->store('shop', 'public');
+            Setting::setValue('shop_icon', $path);
+        }
+
         return response()->json(['success' => true, 'message' => 'Settings updated']);
     }
 
