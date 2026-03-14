@@ -500,7 +500,6 @@
                                     <th class="text-left pb-3 font-semibold text-gray-700">Service</th>
                                     <th class="text-left pb-3 font-semibold text-gray-700">Vendor</th>
                                     <th class="text-right pb-3 font-semibold text-gray-700">Charge</th>
-                                    <th class="text-center pb-3 font-semibold text-gray-700">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -512,9 +511,6 @@
                                         </td>
                                         <td class="py-3 text-sm text-gray-600" x-text="svc.vendor ? svc.vendor.name : '-'"></td>
                                         <td class="py-3 text-right font-bold text-indigo-600" x-text="'₹' + Number(svc.customer_charge).toFixed(2)"></td>
-                                        <td class="py-3 text-center">
-                                            <span class="text-xs px-2.5 py-1 rounded-full font-semibold" :class="{'bg-green-100 text-green-700': svc.status === 'completed', 'bg-yellow-100 text-yellow-700': svc.status === 'pending', 'bg-blue-100 text-blue-700': svc.status === 'in_progress', 'bg-red-100 text-red-700': svc.status === 'cancelled'}" x-text="svc.status.replace('_', ' ')"></span>
-                                        </td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -522,7 +518,6 @@
                                 <tr class="bg-indigo-50 border-t-2 border-indigo-200">
                                     <td colspan="2" class="py-3 text-right font-bold text-gray-800">Total:</td>
                                     <td class="py-3 text-right font-bold text-indigo-600 text-lg" x-text="'₹' + servicesTotal().toFixed(2)"></td>
-                                    <td></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -1056,7 +1051,7 @@ function repairDetail() {
         serviceChargeInput: '',
 
         // Services
-        svcForm: { service_type_id: null, service_type_name: '', vendor_id: null, _vendor_name: '', customer_charge: '', vendor_charge: '', status: 'pending', reference_no: '', description: '' },
+        svcForm: { service_type_id: null, service_type_name: '', vendor_id: null, _vendor_name: '', customer_charge: '', vendor_charge: '', reference_no: '', description: '' },
         svcTypeResults: [], svcTypeHasMore: false, svcTypePage: 1, svcTypeLoading: false,
         vendorSearch: '', vendorResults: [], vendorHasMore: false, vendorPage: 1, vendorLoading: false,
 
@@ -1240,13 +1235,12 @@ function repairDetail() {
                 vendor_id: this.svcForm.vendor_id,
                 customer_charge: this.svcForm.customer_charge,
                 vendor_charge: this.svcForm.vendor_charge || 0,
-                status: this.svcForm.status,
                 reference_no: this.svcForm.reference_no,
                 description: this.svcForm.description,
             });
             if (r.success !== false) {
                 RepairBox.toast('Service added', 'success');
-                this.svcForm = { service_type_id: null, service_type_name: '', vendor_id: null, _vendor_name: '', customer_charge: '', vendor_charge: '', status: 'pending', reference_no: '', description: '' };
+                this.svcForm = { service_type_id: null, service_type_name: '', vendor_id: null, _vendor_name: '', customer_charge: '', vendor_charge: '', reference_no: '', description: '' };
                 await this.reload();
             }
         },
@@ -1255,15 +1249,7 @@ function repairDetail() {
             const r = await RepairBox.ajax('/repairs/' + this.repair.id + '/services/' + serviceId, 'DELETE');
             if (r.success !== false) { RepairBox.toast('Service removed', 'success'); await this.reload(); }
         },
-        async toggleServicePayment(svc) {
-            const newStatus = svc.payment_status === 'completed' ? 'pending' : 'completed';
-            const r = await RepairBox.ajax('/repairs/' + this.repair.id + '/services/' + svc.id, 'PUT', { payment_status: newStatus });
-            if (r.success !== false) { RepairBox.toast('Payment status updated', 'success'); await this.reload(); }
-        },
-        async updateServiceStatus(svc, newStatus) {
-            const r = await RepairBox.ajax('/repairs/' + this.repair.id + '/services/' + svc.id, 'PUT', { status: newStatus });
-            if (r.success !== false) { RepairBox.toast('Service status updated', 'success'); await this.reload(); }
-        },
+
 
         // ===== SERVICE CHARGE =====
         async saveServiceCharge() {

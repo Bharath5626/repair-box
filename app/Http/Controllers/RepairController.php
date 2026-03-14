@@ -262,8 +262,6 @@ class RepairController extends Controller
             'vendor_id' => 'nullable|exists:vendors,id',
             'customer_charge' => 'required|numeric|min:0',
             'vendor_charge' => 'nullable|numeric|min:0',
-            'payment_status' => 'nullable|in:pending,completed',
-            'status' => 'nullable|in:pending,in_progress,completed,cancelled',
             'reference_no' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:1000',
         ]);
@@ -277,8 +275,6 @@ class RepairController extends Controller
         }
 
         $data['vendor_charge'] = $data['vendor_charge'] ?? 0;
-        $data['payment_status'] = $data['payment_status'] ?? 'pending';
-        $data['status'] = $data['status'] ?? 'pending';
 
         $repair->repairServices()->create($data);
 
@@ -296,8 +292,6 @@ class RepairController extends Controller
     public function updateService(Request $request, Repair $repair, $serviceId)
     {
         $data = $request->validate([
-            'payment_status' => 'nullable|in:pending,completed',
-            'status' => 'nullable|in:pending,in_progress,completed,cancelled',
             'vendor_charge' => 'nullable|numeric|min:0',
             'customer_charge' => 'nullable|numeric|min:0',
             'reference_no' => 'nullable|string|max:100',
