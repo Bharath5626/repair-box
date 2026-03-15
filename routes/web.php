@@ -23,6 +23,9 @@ Route::get('/track/{trackingId}', [RepairController::class, 'track']);
 Route::middleware('auth')->group(function () {
     Route::get('/', fn() => redirect('/dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/reminders', [DashboardController::class, 'storeReminder']);
+    Route::put('/dashboard/reminders/{reminder}/toggle', [DashboardController::class, 'toggleReminder']);
+    Route::delete('/dashboard/reminders/{reminder}', [DashboardController::class, 'deleteReminder']);
 
     // Master Data
     Route::resource('categories', CategoryController::class)->except(['edit']);

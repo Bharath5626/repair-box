@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\{Invoice, Repair, Recharge, Expense, LedgerTransaction, Purchase};
+use App\Models\{Invoice, InvoicePayment, Repair, RepairPayment, Recharge, Expense, LedgerTransaction, Purchase, Customer, Refund, Inventory};
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -11,36 +11,92 @@ class ReportService
     public function getDashboardStats(): array
     {
         $today = Carbon::today();
-        $thisMonth = Carbon::now()->startOfMonth();
+
+        // ---------- Sales Progression (Today) ----------
+        $newCustomersToday = Customer::whereDate('created_at', $today)->count();
+
+        // Repeat customers: customers who existed before today AND have invoice/repair today
+        $repeatCustomerIds = Customer::where('created_at', '<', $today)
+            ->whereHas('invoices', fn($q) => $q->whereDate('created_at', $today))
+            ->pluck('id')
+            ->merge(
+                Customer::where('created_at', '<', $today)
+                    ->whereHas('repairs', fn($q) => $q->whereDate('created_at', $today)->where('record_type', '!=', 'void'))
+                    ->pluck('id')
+            )
+            ->unique()
+            ->count();
+
+        $grossSalePayments = InvoicePayment::whereDate('created_at', $today)->sum('amount');
+        $customerPurchaseAmount = Invoice::whereDate('created_at', $today)->whereNotNull('customer_id')->sum('final_amount');
+        $purchaseOrderAmount = Purchase::whereDate('purchase_date', $today)->sum('total_amount');
+        $refundAmount = Refund::whereDate('created_at', $today)->sum('refund_amount');
+
+        // ---------- Repair Ticket Counts by Status ----------
+        $repairCounts = Repair::where('record_type', '!=', 'void')
+            ->select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        // ---------- Sales by Category ----------
+        $posSalesToday = Invoice::whereDate('created_at', $today)->sum('final_amount');
+        $repairSalesToday = RepairPayment::whereDate('created_at', $today)
+            ->where('direction', 'IN')->sum('amount');
+        $totalSalesToday = $posSalesToday + $repairSalesToday;
+
+        // ---------- Low Stock ----------
+        $lowStockCount = Inventory::where('current_stock', '<=', 5)->count();
 
         return [
-            'today_sales' => Invoice::whereDate('created_at', $today)->sum('final_amount'),
-            'monthly_sales' => Invoice::where('created_at', '>=', $thisMonth)->sum('final_amount'),
-            'today_repairs' => Repair::whereDate('created_at', $today)->where('record_type', '!=', 'void')->count(),
-            'pending_repairs' => Repair::whereNotIn('status', ['completed', 'delivered', 'cancelled'])->where('record_type', '!=', 'void')->count(),
-            'monthly_expenses' => Expense::where('expense_date', '>=', $thisMonth)->sum('amount'),
-            'monthly_purchases' => Purchase::where('purchase_date', '>=', $thisMonth)->sum('total_amount'),
-            'today_recharges' => Recharge::whereDate('created_at', $today)->sum('recharge_amount'),
-            'monthly_revenue' => LedgerTransaction::where('direction', 'IN')
-                ->where('created_at', '>=', $thisMonth)->sum('amount'),
-            'monthly_outflow' => LedgerTransaction::where('direction', 'OUT')
-                ->where('created_at', '>=', $thisMonth)->sum('amount'),
-            'recent_invoices' => Invoice::with('customer')->latest()->take(5)->get(),
-            'recent_repairs' => Repair::with('customer')->where('record_type', '!=', 'void')->latest()->take(5)->get(),
-            'sales_chart' => $this->getSalesChart(),
+            'sales_chart'             => $this->getSalesChart(),
+
+            // Sales Progression (Today)
+            'new_customers_today'     => $newCustomersToday,
+            'repeat_customers_today'  => $repeatCustomerIds,
+            'gross_sale_payments'     => $grossSalePayments,
+            'customer_purchase_amount'=> $customerPurchaseAmount,
+            'purchase_order_amount'   => $purchaseOrderAmount,
+            'refund_amount'           => $refundAmount,
+
+            // Repair ticket counts
+            'repair_counts' => [
+                'received'    => $repairCounts['received'] ?? 0,
+                'in_progress' => $repairCounts['in_progress'] ?? 0,
+                'completed'   => $repairCounts['completed'] ?? 0,
+                'payment'     => $repairCounts['payment'] ?? 0,
+                'closed'      => $repairCounts['closed'] ?? 0,
+            ],
+
+            // Sales by category
+            'sales_by_category' => [
+                'pos_sales'    => $posSalesToday,
+                'repair_sales' => $repairSalesToday,
+                'total_sales'  => $totalSalesToday,
+            ],
+
+            // Low stock
+            'low_stock_count' => $lowStockCount,
         ];
     }
 
     private function getSalesChart(): array
     {
         $labels = [];
-        $sales = [];
+        $invoiceSales = [];
+        $repairSales = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
             $labels[] = $date->format('M d');
-            $sales[] = (float) Invoice::whereDate('created_at', $date)->sum('final_amount');
+            $invoiceSales[] = (float) Invoice::whereDate('created_at', $date)->sum('final_amount');
+            $repairSales[] = (float) RepairPayment::whereDate('created_at', $date)
+                ->where('direction', 'IN')->sum('amount');
         }
-        return ['labels' => $labels, 'data' => $sales];
+        return [
+            'labels' => $labels,
+            'data' => $invoiceSales,
+            'repair_data' => $repairSales,
+        ];
     }
 
     public function getSalesReport(string $from, string $to): array
