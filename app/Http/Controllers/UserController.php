@@ -45,6 +45,12 @@ class UserController extends Controller
     public function update(UserRequest $request, User $user)
     {
         $data = $request->validated();
+
+        // Super admin: cannot change role or status — only name/email/password allowed
+        if ($user->is_super_admin) {
+            unset($data['role_id'], $data['status']);
+        }
+
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
@@ -58,6 +64,9 @@ class UserController extends Controller
     {
         if ($user->id === auth()->id()) {
             return response()->json(['success' => false, 'message' => 'Cannot delete yourself'], 403);
+        }
+        if ($user->is_super_admin) {
+            return response()->json(['success' => false, 'message' => 'Super admin account cannot be deleted'], 403);
         }
         $user->delete();
         return response()->json(['success' => true, 'message' => 'User deleted']);

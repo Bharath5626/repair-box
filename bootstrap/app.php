@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn ($request) =>
             $request->expectsJson() ? null : route('login')
         );
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckInstalled::class,
+        ]);
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);

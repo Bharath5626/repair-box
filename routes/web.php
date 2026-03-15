@@ -8,8 +8,21 @@ use App\Http\Controllers\{
     RechargeController, ServiceController, ExpenseController, LedgerController,
     ReturnController, UserController, SettingController, ReportController,
     PartController, RepairReturnController, RoleController, MenuController,
-    CreditNoteController
+    CreditNoteController, SetupController, DevToolsController
 };
+
+// ─── Setup Wizard (public — no auth needed) ────────────────────────────────
+Route::prefix('setup')->name('setup.')->group(function () {
+    Route::get('/',          [SetupController::class, 'index'])->name('index');
+    Route::get('/database',  [SetupController::class, 'databaseForm'])->name('database');
+    Route::post('/database', [SetupController::class, 'saveDatabase'])->name('database.save');
+    Route::post('/test-connection', [SetupController::class, 'testConnection'])->name('test-connection');
+    Route::get('/owner',     [SetupController::class, 'ownerForm'])->name('owner');
+    Route::post('/owner',    [SetupController::class, 'saveOwner'])->name('owner.save');
+    Route::get('/migrate',   [SetupController::class, 'migrateForm'])->name('migrate');
+    Route::post('/migrate',  [SetupController::class, 'runMigrations'])->name('migrate.run');
+    Route::get('/complete',  [SetupController::class, 'complete'])->name('complete');
+});
 
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -152,4 +165,13 @@ Route::middleware('auth')->group(function () {
     Route::get('activity-logs', [SettingController::class, 'activityLogs'])->name('activity-logs.index');
     Route::get('backups', [SettingController::class, 'backups']);
     Route::post('backups', [SettingController::class, 'createBackup']);
+
+    // ─── Dev Tools (admin only) ────────────────────────────────────────────
+    Route::prefix('dev-tools')->name('dev-tools.')->group(function () {
+        Route::get('/',           [DevToolsController::class, 'index'])->name('index');
+        Route::post('/reset',     [DevToolsController::class, 'resetData'])->name('reset');
+        Route::post('/seed',      [DevToolsController::class, 'seedDemo'])->name('seed');
+        Route::post('/reset-seed',[DevToolsController::class, 'resetAndSeed'])->name('reset-seed');
+    });
 });
+
