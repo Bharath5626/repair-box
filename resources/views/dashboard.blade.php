@@ -394,9 +394,7 @@
                 <span class="section-badge">Today</span>
             </div>
             <div style="padding:20px 24px;display:flex;align-items:center;justify-content:center;">
-                <div style="position:relative;width:240px;height:240px;">
-                    <canvas id="salesByCategoryChart"></canvas>
-                </div>
+                <canvas id="salesByCategoryChart" width="240" height="240" style="display:block;"></canvas>
             </div>
             {{-- Category summary cards --}}
             <div style="padding:0 24px 24px;">
